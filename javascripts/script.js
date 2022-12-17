@@ -4,6 +4,7 @@ const context = canvas.getContext('2d');
 const socket = io('http://localhost:3000');
 let paddleIndex = 0;
 
+let isReferee = false;
 let width = 500;
 let height = 700;
 
@@ -162,11 +163,14 @@ function animate() {
 }
 
 // Start Game, Reset Everything
-function startGame() {
+function loadGame() {
   createCanvas();
   renderIntro();
-  
-  paddleIndex = 0;
+  socket.emit('ready');
+}
+
+function startGame() {
+  paddleIndex = isReferee ? 0 : 1;
   window.requestAnimationFrame(animate);
   canvas.addEventListener('mousemove', (e) => {
     playerMoved = true;
@@ -182,6 +186,18 @@ function startGame() {
   });
 }
 
+
 // On Load
-startGame();
+loadGame();
+socket.on('connect', () => {
+  console.log('Connected as ....', socket.id);
+});
+
+socket.on('startGame', (referreId) => {
+  console.log('Referre is', referreId);
+
+  isReferee = socket.id === referreId;
+  startGame();
+
+})
 
